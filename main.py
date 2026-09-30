@@ -12,8 +12,12 @@ def main():
     # Environment initialization
     device, pin_memory = init_device(args.seed, args.cpu, args.gpu, args.cpu_affinity)
 
-    # Create the data loader
 
+    if 'GIROS' in args.dataset:
+        # TODO: load here the dataset using Pablo's Dataset class
+        pass
+
+    # Create the data loader
     train_loader, val_loader, test_loader = Cost2100DataLoader(
         root=args.data_dir,
         batch_size=args.batch_size,
