@@ -43,3 +43,8 @@ data/*
 snapshots/
 checkpoints/
 *.pth
+
+
+data_vision/test/
+data_vision/best/
+data_vision/every/

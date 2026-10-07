@@ -135,6 +135,29 @@ python /home/TransNet/main.py \
 ```
 
 
+# Execute with GIROS NR fingerprint dataset
+In the example below we run TransNet performing compression per symbol.
+The example has a compression ratio $\eta=1/8$,
+a dimension of 64 features for the transformer,
+batch size of 64,
+2 workers,
+and 100 epochs.
+```
+python main.py\
+    --data-dir /data/dataset_12-03/tensored_grid/torch.float8_e4m3fn/\
+    --gpu 0\
+    --dtype torch.float8_e4m3fn\
+    --labels_csv_path /data/dataset_12-03/detection_log.csv\
+    --epochs 100\
+    --cr 8\
+    -d 36\
+    -b 64\
+    -j 2\
+    -g\
+    --scenario in 
+```
+
+
 
 
 ## Acknowledgment

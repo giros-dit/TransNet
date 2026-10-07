@@ -40,9 +40,10 @@ def init_device(seed=None, cpu=None, gpu=None, affinity=None):
     return device, pin_memory
 
 
-def init_model(args):
+def init_model(args, dim_feedforward=2048):
     # Model loading
-    model = transnet(reduction=args.cr, d_model=args.d_model)
+    model = transnet(reduction=args.cr, d_model=args.d_model,
+                     dim_feedforward=dim_feedforward)
 
     if args.pretrained is not None:
         assert os.path.isfile(args.pretrained)
@@ -51,16 +52,16 @@ def init_model(args):
         model.load_state_dict(state_dict,strict=False)
         logger.info("pretrained model loaded from {}".format(args.pretrained))
 
-    # Model flops and params counting
-    H_a = torch.randn([1,2,32,32])
-    flops, params = thop.profile(model, inputs=(H_a,), verbose=False)
-    flops, params = thop.clever_format([flops, params], "%.3f")
+    ## # Model flops and params counting
+    ## H_a = torch.randn([1,2,32,32])
+    ## flops, params = thop.profile(model, inputs=(H_a,), verbose=False)
+    ## flops, params = thop.clever_format([flops, params], "%.3f")
 
-    # Model info logging
-    logger.info(f'=> Model Name: TransNet [pretrained: {args.pretrained}]')
-    logger.info(f'=> Model Config: compression ratio=1/{args.cr}')
-    logger.info(f'=> Model Flops: {flops}')
-    logger.info(f'=> Model Params Num: {params}\n')
-    logger.info(f'{line_seg}\n{model}\n{line_seg}\n')
+    ## # Model info logging
+    ## logger.info(f'=> Model Name: TransNet [pretrained: {args.pretrained}]')
+    ## logger.info(f'=> Model Config: compression ratio=1/{args.cr}')
+    ## logger.info(f'=> Model Flops: {flops}')
+    ## logger.info(f'=> Model Params Num: {params}\n')
+    ## logger.info(f'{line_seg}\n{model}\n{line_seg}\n')
 
     return model

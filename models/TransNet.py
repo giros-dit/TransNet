@@ -1,4 +1,5 @@
 import torch
+from torch.fft import fft2, ifft2
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 from torch.nn.init import xavier_uniform_
@@ -366,14 +367,18 @@ class Transformer(nn.Module):
         
         self.d_model = d_model
         
-        assert not (2048 % self.d_model), 'd_model needs to be divisible by the size of the entire csi matrix (2048)'
-        self.feature_shape = (2048//self.d_model, self.d_model)
+        #assert not (2048 % self.d_model), 'd_model needs to be divisible by the size of the entire csi matrix (2048)'
+        #self.feature_shape = (2048//self.d_model, self.d_model)
+        assert not (dim_feedforward % self.d_model), 'd_model needs to be divisible by the size of the entire csi matrix (2048)'
+        self.feature_shape = (dim_feedforward//self.d_model, self.d_model)
         
         self.nhead = nhead
 
         self.batch_first = batch_first
-        self.fc_encoder = nn.Linear(2048,2048//reduction)
-        self.fc_decoder = nn.Linear(2048//reduction,2048)
+        #self.fc_encoder = nn.Linear(2048,2048//reduction)
+        #self.fc_decoder = nn.Linear(2048//reduction,2048)
+        self.fc_encoder = nn.Linear(dim_feedforward,dim_feedforward//reduction)
+        self.fc_decoder = nn.Linear(dim_feedforward//reduction,dim_feedforward)
         self._reset_parameters()
         
 
@@ -382,13 +387,16 @@ class Transformer(nn.Module):
                     memory_mask: Optional[Tensor] = None, src_key_padding_mask: Optional[Tensor] = None,
                     tgt_key_padding_mask: Optional[Tensor] = None,
                     memory_key_padding_mask: Optional[Tensor] = None) -> Tensor:
+
             memory = self.encoder(src.view(-1, self.feature_shape[0], self.feature_shape[1]), mask=src_mask, src_key_padding_mask=src_key_padding_mask)
             memory_encoder = self.fc_encoder(memory.view(memory.shape[0],-1))
             memory_decoder = self.fc_decoder(memory_encoder).view(-1, self.feature_shape[0], self.feature_shape[1])
             output = self.decoder(memory_decoder, memory_decoder, tgt_mask=tgt_mask, memory_mask=memory_mask,
                                   tgt_key_padding_mask=tgt_key_padding_mask,
                                   memory_key_padding_mask=memory_key_padding_mask)
-            output = output.view(-1,2,32,32)
+
+            #output = output.view(-1,2,32,32)
+            output = output.view(-1,1,1080)
             return output
 
     def generate_square_subsequent_mask(self, sz: int) -> Tensor:
@@ -404,12 +412,14 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 xavier_uniform_(p)
 
-def transnet(reduction=64, d_model=64):
+def transnet(reduction=64, d_model=64, dim_feedforward=2048):
 
     r""" Create a proposed TransNet.
 
         :param reduction: the reciprocal of compression ratio
         :return: an instance of TransNet
     """
-    model = Transformer(d_model=d_model, num_encoder_layers=2, num_decoder_layers=2, nhead=2, reduction =reduction, dropout= 0.)
+    model = Transformer(d_model=d_model, num_encoder_layers=2,
+                        num_decoder_layers=2, nhead=2, reduction =reduction,
+                        dropout= 0., dim_feedforward=dim_feedforward)
     return model

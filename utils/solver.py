@@ -119,7 +119,9 @@ class Trainer:
         iter_time = AverageMeter('Iter time')
         time_tmp = time.time()
 
-        for batch_idx, (sparse_gt, ) in enumerate(data_loader):
+        #for batch_idx, (sparse_gt, ) in enumerate(data_loader):
+        for batch_idx, sparse_gt_list in enumerate(data_loader):
+            sparse_gt = sparse_gt_list[0]
             sparse_gt = sparse_gt.to(self.device)
             sparse_pred = self.model(sparse_gt)
             loss = self.criterion(sparse_pred, sparse_gt)

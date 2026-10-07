@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description='CRNet PyTorch Training')
 
 parser.add_argument('--data-dir', type=str, required=True,
                     help='the path of dataset.')
-parser.add_argument('--scenario', type=str, required=True, choices=["in", "out"],
+parser.add_argument('--scenario', type=str, required=False, choices=["in", "out"],
                     help="the channel scenario")
 parser.add_argument('-b', '--batch-size', type=int, required=True, metavar='N',
                     help='mini-batch size')
@@ -18,6 +18,8 @@ parser.add_argument('-j', '--workers', type=int, metavar='N', required=True,
 # ============================= Optical arguments =============================
 
 # Working mode arguments
+parser.add_argument('-g', '--giros', action='store_true',
+                    help='specify that GIROS NR dataset is used')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', type=str, default=None,
@@ -32,6 +34,10 @@ parser.add_argument('--cpu', action='store_true',
                     help='disable GPU training (default: False)')
 parser.add_argument('--cpu-affinity', default=None, type=str,
                     help='CPU affinity, like "0xffff"')
+parser.add_argument('--dtype', default=None, type=str,
+                    help='torch.float{64,32,16,8_e4m3fn}')
+parser.add_argument('--labels_csv_path', default=None, type=str,
+                    help='path to CSV with labels path')
 
 # Other arguments
 parser.add_argument('--epochs', type=int, metavar='N',

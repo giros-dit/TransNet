@@ -3,9 +3,11 @@ import torch.nn as nn
 from utils.parser import args
 from utils import logger, Trainer, Tester
 from utils import init_device, init_model, FakeLR, WarmUpCosineAnnealingLR
-from dataloader import Cost2100DataLoader
+from dataloader import Cost2100DataLoader, GridTensorDataset, GridSymbolTensorDataset
 from tensorboardX import SummaryWriter
 from torchviz import make_dot
+from torch.utils.data import DataLoader
+
 
 def main():
     logger.info('=> PyTorch Version: {}'.format(torch.__version__))
@@ -13,22 +15,49 @@ def main():
     device, pin_memory = init_device(args.seed, args.cpu, args.gpu, args.cpu_affinity)
 
 
-    if 'GIROS' in args.dataset:
-        # TODO: load here the dataset using Pablo's Dataset class
-        pass
+    if args.giros:
+        # load GIROS NR presence dataset
+        gridTensorDataset = GridSymbolTensorDataset(
+            root_dir=args.data_dir,
+            labels_csv_path=args.labels_csv_path,
+        )
 
-    # Create the data loader
-    train_loader, val_loader, test_loader = Cost2100DataLoader(
-        root=args.data_dir,
-        batch_size=args.batch_size,
-        num_workers=args.workers,
-        pin_memory=pin_memory,
-        scenario=args.scenario)()
+        # Split into training test and validation
+        train_dataset, val_dataset, test_dataset\
+            = torch.utils.data.dataset.random_split(
+                    gridTensorDataset, [.8,.1,.1])
 
-    # Define model
- 
-    model = init_model(args)
-    model.to(device)
+        # Create the dataloaders
+        train_loader = DataLoader(train_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        val_loader = DataLoader(val_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        test_loader = DataLoader(test_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        # Define model
+        model = init_model(args, dim_feedforward=2*540)
+        model.to(device)
+    else:
+        # Create the data loader
+        train_loader, val_loader, test_loader = Cost2100DataLoader(
+            root=args.data_dir,
+            batch_size=args.batch_size,
+            num_workers=args.workers,
+            pin_memory=pin_memory,
+            scenario=args.scenario)()
+
+        # Define model
+        model = init_model(args)
+        model.to(device)
 
     # Define loss function
     criterion = nn.MSELoss().to(device)
