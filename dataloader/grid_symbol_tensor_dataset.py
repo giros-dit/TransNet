@@ -1,5 +1,5 @@
 """
-Author: Pablo Fernández López
+Author: Pablo Fernández López, Jorge Martín Pérez
 https://github.com/giros-dit/isac-sensing-presence-ml/blob/main/grid_tensor_dataset.py
 """
 
