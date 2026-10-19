@@ -135,6 +135,44 @@ python /home/TransNet/main.py \
 ```
 
 
+# Execute with FAWN fingerprint dataset
+In the example below we run TransNet performing compression per symbol.
+The example has a compression ratio $\eta=1/8$,
+a dimension of 64 features for the transformer,
+batch size of 64,
+2 workers,
+and 100 epochs.
+```
+python main.py\
+    --data-dir /data/datasets/medidas-fawn/3gpp/tensored/torch.float8_e4m3fn/\
+    --gpu 0\
+    --dtype torch.float8_e4m3fn\
+    --labels_csv_path /data/datasets/GIROS/dataset_12-03/detection_log.csv\
+    --epochs 1000\
+    --cr 8\
+    -d 36\
+    -b 64\
+    -j 2\
+    -fawn\
+    --scenario in\
+    --save_path /data/datasets/medidas-fawn/3gpp/transnet-models/cr8ep1000d36b64
+```
+
+
+# Execute a trained model to perform compression
+```
+python compressor.py\
+    --model_path /data/dataset_12-03/transnet-models/torch.float8_e4m3fn/cr2ep1000d36b64/best_nmse.pth\
+    --cr 2\
+    --d_model 36\
+    --grids_dir /data/dataset_12-03/tensored_grid/torch.float8_e4m3fn/\
+    --out_dir /data/dataset_12-03/transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
+    --dim_feedforward 1080
+```
+
+
+
+
 # Execute with GIROS NR fingerprint dataset
 In the example below we run TransNet performing compression per symbol.
 The example has a compression ratio $\eta=1/8$,
@@ -169,6 +207,10 @@ python compressor.py\
     --out_dir /data/dataset_12-03/transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
     --dim_feedforward 1080
 ```
+
+
+
+
 
 
 

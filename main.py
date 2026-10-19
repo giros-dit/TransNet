@@ -74,7 +74,8 @@ def main():
                                  pin_memory=pin_memory,
                                  shuffle=True)
         # Define model
-        model = init_model(args, dim_feedforward=2*360)
+        model = init_model(args, dim_feedforward=2*360,
+                           out_dim=2*360)
         model.to(device)
     else:
         # Create the data loader

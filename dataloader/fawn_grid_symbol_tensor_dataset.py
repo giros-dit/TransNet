@@ -97,7 +97,7 @@ class FAWNGridSymbolTensorDataset(Dataset):
         self.class_to_idx = {cls_name: idx for idx, cls_name in enumerate(self.classes)}
 
         # Collect all tensor files from root directory
-        self.tensor_files = sorted(glob.glob(os.path.join(root_dir, '*.mat')))
+        self.tensor_files = sorted(glob.glob(os.path.join(root_dir, '*.pt')))
         if len(self.tensor_files) == 0:
             raise RuntimeError(f"No tensor files found in {root_dir}")
         
@@ -174,22 +174,20 @@ class FAWNGridSymbolTensorDataset(Dataset):
         return tensor
 
     def __getitem__(self, idx):
-        nsyms = 30 * 6
+        nsyms = 6
         f = self.tensor_files[idx // nsyms]
-        grid = loadmat(f)['dataSSB'][:,idx%6,idx%30]
+        symbol = torch.zeros((2,360))
+        symbol[:,:360] = torch.load(f)[:,:,idx%nsyms]
+        symbol = torch.complex(symbol[0,:], symbol[1,:])
         label = f.split('/')[-1].split('(')[-1].split(')')[0]
 
-        print(f'{type(grid)=}')
-        print(f'{grid.shape=}')
-        t = torch.from_numpy(grid)
-        print(t)
-
         # Get the FFT using the complex grid
-        ffted = fft(grid)
+        ffted = fft(symbol)
 
         # Collapse phase and amplitude into the same channel as in paper
         real_imag = torch.cat((ffted.real, ffted.imag), 0)
-        t = torch.reshape(real_imag, (1,2*540))
+        t = torch.reshape(real_imag, (1,2*360))
+
 
         return t, label
 

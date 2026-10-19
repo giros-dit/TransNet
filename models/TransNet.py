@@ -347,7 +347,8 @@ class Transformer(nn.Module):
     def __init__(self, d_model: int = 64, nhead: int = 8, num_encoder_layers: int = 6,
                  num_decoder_layers: int = 6, dim_feedforward: int = 2048, dropout: float = 0.1,
                  activation = F.relu, custom_encoder: Optional[Any] = None, custom_decoder: Optional[Any] = None,
-                 layer_norm_eps: float = 1e-5, batch_first: bool = False,  reduction=64) -> None:
+                 layer_norm_eps: float = 1e-5, batch_first: bool = False,
+                 reduction=64, out_dim=1080) -> None:
         super(Transformer, self).__init__()
         if custom_encoder is not None:
             self.encoder = custom_encoder
@@ -380,6 +381,7 @@ class Transformer(nn.Module):
         self.fc_encoder = nn.Linear(dim_feedforward,dim_feedforward//reduction)
         self.fc_decoder = nn.Linear(dim_feedforward//reduction,dim_feedforward)
         self._reset_parameters()
+        self.out_dim = out_dim
         
 
     def forward(self, src: Tensor, tgt: Optional[Tensor]=None, src_mask: Optional[Tensor] = None,
@@ -396,7 +398,8 @@ class Transformer(nn.Module):
                                   memory_key_padding_mask=memory_key_padding_mask)
 
             #output = output.view(-1,2,32,32)
-            output = output.view(-1,1,1080)
+            #output = output.view(-1,1,1080)
+            output = output.view(-1,1,self.out_dim)
             return output
 
     def generate_square_subsequent_mask(self, sz: int) -> Tensor:
@@ -412,7 +415,7 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 xavier_uniform_(p)
 
-def transnet(reduction=64, d_model=64, dim_feedforward=2048):
+def transnet(reduction=64, d_model=64, dim_feedforward=2048, out_dim=1080):
 
     r""" Create a proposed TransNet.
 
@@ -421,5 +424,6 @@ def transnet(reduction=64, d_model=64, dim_feedforward=2048):
     """
     model = Transformer(d_model=d_model, num_encoder_layers=2,
                         num_decoder_layers=2, nhead=2, reduction =reduction,
-                        dropout= 0., dim_feedforward=dim_feedforward)
+                        dropout= 0., dim_feedforward=dim_feedforward,
+                        out_dim=out_dim)
     return model
