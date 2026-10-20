@@ -162,12 +162,13 @@ python main.py\
 # Execute a trained model to perform compression
 ```
 python compressor.py\
-    --model_path /data/dataset_12-03/transnet-models/torch.float8_e4m3fn/cr2ep1000d36b64/best_nmse.pth\
+    --model_path /data/datasets/medidas-fawn/3gpp/transnet-models/cr2ep1000d36b64/best_nmse.pth\
     --cr 2\
     --d_model 36\
-    --grids_dir /data/dataset_12-03/tensored_grid/torch.float8_e4m3fn/\
-    --out_dir /data/dataset_12-03/transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
-    --dim_feedforward 1080
+    --grids_dir /data/datasets/medidas-fawn/3gpp/tensored/torch.float8_e4m3fn/\
+    --out_dir /data/datasets/medidas-fawn/3gpp/transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
+    --dim_feedforward 720\
+    -fawn
 ```
 
 

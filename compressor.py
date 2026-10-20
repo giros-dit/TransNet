@@ -33,12 +33,20 @@ if __name__ == "__main__":
         help='path to dir with grids .pt')
     parser.add_argument('--out_dir', type=str,
                     help='path to store the compressed grids')
+    parser.add_argument('-fawn', action='store_true',
+                    help='flag for FAWN dataset')
     args = parser.parse_args()
 
 
     # Load the TransNet model
+    print(f'{args.dim_feedforward=}')
+    if args.fawn:
+        out_dim = 2*360
+    else:
+        out_dim = 2*540
     model = transnet(reduction=args.cr, d_model=args.d_model,
-                     dim_feedforward=args.dim_feedforward)
+                     dim_feedforward=args.dim_feedforward,
+                     out_dim=out_dim)
     model.load_state_dict(torch.load(args.model_path,
         weights_only=False)['state_dict'])
     model.eval()
@@ -47,7 +55,10 @@ if __name__ == "__main__":
     # pass
     for f in glob.glob(f'{args.grids_dir}/*.pt'):
         fname = f.split('/')[-1]
-        z = torch.zeros(2, 540, 14)
+        if args.fawn:
+            z = torch.zeros(2, 360, 6)
+        else:
+            z = torch.zeros(2, 540, 14)
         t = torch.load(f).to(torch.float32)
         t_comp = torch.zeros(z.shape)
 
@@ -55,14 +66,24 @@ if __name__ == "__main__":
         z[:,:,:t.shape[-1]] = t
         t = z
 
-        for sym in range(14):
+        if args.fawn:
+            nsyms = 6
+        else:
+            nsyms = 14
+        for sym in range(nsyms):
             # FFT
             ffted = fft(torch.polar(t[0,:,sym], t[1,:,sym]))
             # Collapse phase and amplitude into the same channel as in paper
             real_imag = torch.cat((ffted.real, ffted.imag), 0)
-            concatenated_tensor = torch.reshape(real_imag, (1,2*540))
+            if args.fawn:
+                concatenated_tensor = torch.reshape(real_imag, (1,2*360))
+            else:
+                concatenated_tensor = torch.reshape(real_imag, (1,2*540))
             out = model(concatenated_tensor)[0,0,:]
-            iffted = ifft(torch.complex(out[:540], out[540:]))
+            if args.fawn:
+                iffted = ifft(torch.complex(out[:360], out[360:]))
+            else:
+                iffted = ifft(torch.complex(out[:540], out[540:]))
             ampl, phase = to_polar(iffted.real, iffted.imag)
 
             t_comp[0,:,sym] = ampl
