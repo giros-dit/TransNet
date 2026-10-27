@@ -35,6 +35,8 @@ if __name__ == "__main__":
                     help='path to store the compressed grids')
     parser.add_argument('-fawn', action='store_true',
                     help='flag for FAWN dataset')
+    parser.add_argument('-fraunhofer', action='store_true',
+                    help='flag for Fraunhofer dataset')
     args = parser.parse_args()
 
 
@@ -42,6 +44,8 @@ if __name__ == "__main__":
     print(f'{args.dim_feedforward=}')
     if args.fawn:
         out_dim = 2*360
+    elif args.fawn:
+        out_dim = 2*(49+5)
     else:
         out_dim = 2*540
     model = transnet(reduction=args.cr, d_model=args.d_model,
@@ -57,16 +61,21 @@ if __name__ == "__main__":
         fname = f.split('/')[-1]
         if args.fawn:
             z = torch.zeros(2, 360, 6)
+        elif args.fraunhofer:
+            z = torch.zeros(2, 49+5, 6)
         else:
             z = torch.zeros(2, 540, 14)
         t = torch.load(f).to(torch.float32)
         t_comp = torch.zeros(z.shape)
 
         # Fill with zero missing symbols
-        z[:,:,:t.shape[-1]] = t
+        if args.fraunhofer:
+            z[:,:49,:t.shape[-1]] = t
+        else:
+            z[:,:,:t.shape[-1]] = t
         t = z
 
-        if args.fawn:
+        if args.fawn or args.fraunhofer:
             nsyms = 6
         else:
             nsyms = 14
@@ -77,19 +86,27 @@ if __name__ == "__main__":
             real_imag = torch.cat((ffted.real, ffted.imag), 0)
             if args.fawn:
                 concatenated_tensor = torch.reshape(real_imag, (1,2*360))
+            elif args.fraunhofer:
+                concatenated_tensor = torch.reshape(real_imag, (1,2*(49+5)))
             else:
                 concatenated_tensor = torch.reshape(real_imag, (1,2*540))
             out = model(concatenated_tensor)[0,0,:]
             if args.fawn:
                 iffted = ifft(torch.complex(out[:360], out[360:]))
+            elif args.fraunhofer:
+                iffted = ifft(torch.complex(out[:49+5], out[49+5:]))
             else:
                 iffted = ifft(torch.complex(out[:540], out[540:]))
             ampl, phase = to_polar(iffted.real, iffted.imag)
 
             t_comp[0,:,sym] = ampl
             t_comp[1,:,sym] = phase
+            
+        # Remove the extra padding added for TransNet input
+        if args.fraunhofer:
+            t_comp = ampl[:,:49,:]
 
         print('Saving at: ', f'{args.out_dir}/{fname}')
-        torch.save(t, f'{args.out_dir}/{fname}')
+        torch.save(t_comp, f'{args.out_dir}/{fname}')
 
 

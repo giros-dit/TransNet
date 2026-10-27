@@ -370,6 +370,7 @@ class Transformer(nn.Module):
         
         #assert not (2048 % self.d_model), 'd_model needs to be divisible by the size of the entire csi matrix (2048)'
         #self.feature_shape = (2048//self.d_model, self.d_model)
+        print(f'{dim_feedforward=} {self.d_model=}')
         assert not (dim_feedforward % self.d_model), 'd_model needs to be divisible by the size of the entire csi matrix (2048)'
         self.feature_shape = (dim_feedforward//self.d_model, self.d_model)
         

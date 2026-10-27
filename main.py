@@ -3,7 +3,7 @@ import torch.nn as nn
 from utils.parser import args
 from utils import logger, Trainer, Tester
 from utils import init_device, init_model, FakeLR, WarmUpCosineAnnealingLR
-from dataloader import Cost2100DataLoader, GridTensorDataset, GridSymbolTensorDataset, FAWNGridSymbolTensorDataset
+from dataloader import Cost2100DataLoader, GridTensorDataset, GridSymbolTensorDataset, FAWNGridSymbolTensorDataset, FraunhoferGridSymbolTensorDataset
 from tensorboardX import SummaryWriter
 from torchviz import make_dot
 from torch.utils.data import DataLoader
@@ -76,6 +76,37 @@ def main():
         # Define model
         model = init_model(args, dim_feedforward=2*360,
                            out_dim=2*360)
+        model.to(device)
+    elif args.fraunhofer:
+        # load GIROS NR presence dataset
+        gridTensorDataset = FraunhoferGridSymbolTensorDataset(
+            root_dir=args.data_dir,
+        )
+
+        # Split into training test and validation
+        train_dataset, val_dataset, test_dataset\
+            = torch.utils.data.dataset.random_split(
+                    gridTensorDataset, [.8,.1,.1])
+
+        # Create the dataloaders
+        train_loader = DataLoader(train_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        val_loader = DataLoader(val_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        test_loader = DataLoader(test_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.workers,
+                                 pin_memory=pin_memory,
+                                 shuffle=True)
+        # Define model
+        model = init_model(args, dim_feedforward=2*(49+5),
+                           out_dim=2*(49+5))
         model.to(device)
     else:
         # Create the data loader
