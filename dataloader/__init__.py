@@ -3,3 +3,4 @@ from .grid_tensor_dataset import GridTensorDataset
 from .grid_symbol_tensor_dataset import GridSymbolTensorDataset
 from .fawn_grid_symbol_tensor_dataset import FAWNGridSymbolTensorDataset
 from .fraunhofer_tensor_dataset import FraunhoferGridSymbolTensorDataset
+from .caez_tensor_dataset import CaezGridSymbolTensorDataset

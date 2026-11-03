@@ -24,6 +24,8 @@ parser.add_argument('-fawn', '--fawn', action='store_true',
                     help='specify that FAWN NR dataset is used')
 parser.add_argument('-fraunhofer', '--fraunhofer', action='store_true',
                     help='specify that Fraunhofer 5G dataset is used')
+parser.add_argument('-caez', '--caez', action='store_true',
+                    help='specify that CAEZ 5G dataset is used')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', type=str, default=None,
