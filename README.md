@@ -179,7 +179,7 @@ python main.py\
     -j 2\
     -fraunhofer\
     --scenario in\
-    --save_path /data/datasets/medidas-fawn/3gpp/transnet-models/cr8ep1000d36b64
+    --save_path /data/datasets/fraunhofer5G/transnet-models/cr8ep1000d36b64/
 ```
 
 
@@ -189,7 +189,9 @@ python main.py\
 
 
 # Execute a trained model to perform compression
-```
+
+## FAWN
+```bash
 python compressor.py\
     --model_path /data/datasets/medidas-fawn/3gpp/transnet-models/cr2ep1000d36b64/best_nmse.pth\
     --cr 2\
@@ -198,6 +200,18 @@ python compressor.py\
     --out_dir /data/datasets/medidas-fawn/3gpp/transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
     --dim_feedforward 720\
     -fawn
+```
+
+## Fraunhofer
+```bash
+python compressor.py\
+    --model_path /data/datasets/fraunhofer5G/transnet-models/cr2ep1000d36b64/best_nmse.pth\
+    --cr 2\
+    --d_model 36\
+    --grids_dir /data/datasets/fraunhofer5G/preprocessed_test_tensored/torch.float8_e4m3fn/\
+    --out_dir /data/datasets/fraunhofer5G/preprocessed_test_transnetted/torch.float8_e4m3fn/cr2ep1000d36b64/\
+    --dim_feedforward 720\
+    -fraunhofer
 ```
 
 

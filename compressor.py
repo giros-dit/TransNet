@@ -44,7 +44,7 @@ if __name__ == "__main__":
     print(f'{args.dim_feedforward=}')
     if args.fawn:
         out_dim = 2*360
-    elif args.fawn:
+    elif args.fraunhofer:
         out_dim = 2*(49+5)
     else:
         out_dim = 2*540
@@ -102,9 +102,9 @@ if __name__ == "__main__":
             t_comp[0,:,sym] = ampl
             t_comp[1,:,sym] = phase
             
-        # Remove the extra padding added for TransNet input
+        # Remove the extra padding added for TransNet input, get only amplitude
         if args.fraunhofer:
-            t_comp = ampl[:,:49,:]
+            t_comp = t_comp[0,:49,:]
 
         print('Saving at: ', f'{args.out_dir}/{fname}')
         torch.save(t_comp, f'{args.out_dir}/{fname}')
