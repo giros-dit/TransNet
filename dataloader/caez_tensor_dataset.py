@@ -97,9 +97,29 @@ class CaezGridSymbolTensorDataset(Dataset):
         self.class_to_idx = {cls_name: idx for idx, cls_name in enumerate(self.classes)}
 
         # Collect all tensor files from root directory
-        self.tensor_files = sorted(glob.glob(os.path.join(root_dir, 'H*B*A*.pt')))
+        self.tensor_files = glob.glob(os.path.join(root_dir, 'H*B*A*.pt'))
         if len(self.tensor_files) == 0:
             raise RuntimeError(f"No tensor files found in {root_dir}")
+
+        # H-t_99990-B_3-A_0.pt
+        # sort 1st by time, 2nd by B, 3rd by A:
+        #   H-t_0-B_0-A_0.pt
+        #   H-t_0-B_0-A_1.pt
+        #   H-t_0-B_0-A_2.pt
+        #   H-t_0-B_0-A_3.pt
+        #   H-t_0-B_1-A_0.pt
+        #   H-t_0-B_1-A_1.pt
+        #   H-t_0-B_1-A_2.pt
+        #   H-t_0-B_1-A_3.pt
+        #   H-t_0-B_2-A_0.pt
+        #   H-t_0-B_2-A_1.pt
+        self.tensor_files.sort(
+            key=lambda f:\
+                ( int(f.split('-')[1][2:]),
+                  int(f.split('-')[2][2]),
+                  int(f.split('-')[3][2]) )
+        )
+
         
         print(f"Found {len(self.tensor_files)} tensor files in total")
         
@@ -174,21 +194,47 @@ class CaezGridSymbolTensorDataset(Dataset):
         return tensor
 
     def __getitem__(self, idx):
-        nts = 10 # number of time samples (spaced by 20ms)
-        f = self.tensor_files[idx // nts]
-        symbol = torch.zeros((1,273+15), dtype=torch.float32) # add +5 entries to fit TransNet d36
-        symbol[0,:273] = torch.load(f)[:,:,idx%nts]
-        symbol = torch.complex(symbol[0,:], torch.zeros(symbol[0,:].shape))
+
+        # Generate the matrix H w/ shape (4, 273)
+        H = torch.zeros((4,273+15), dtype=torch.float32) 
+
+        # Load the file for the different antennas
+        #  each file inside tensor_files e.g. H-t_0-B_0-A_0.pt has shape (1,273,10)
+        fA0 = torch.load(self.tensor_files[(idx//10) * 4])
+        fA1 = torch.load(self.tensor_files[(idx//10) * 4])
+        fA2 = torch.load(self.tensor_files[(idx//10) * 4])
+        fA3 = torch.load(self.tensor_files[(idx//10) * 4])
+        print(f'{fA3.shape=}')
+        H[0,:273] = fA0[0,:,idx % 10]
+        H[1,:273] = fA1[0,:,idx % 10]
+        H[2,:273] = fA2[0,:,idx % 10]
+        H[3,:273] = fA3[0,:,idx % 10]
+
+        # Create the complex tensor
+        H_ = torch.complex(H, torch.zeros(H.shape))
 
         # Get the FFT using the complex grid
-        ffted = fft(symbol)
+        ffted = fft(H_)
 
         # Collapse phase and amplitude into the same channel as in paper
-        real_imag = torch.cat((ffted.real, ffted.imag), 0)
-        t = torch.reshape(real_imag, (1,2*(273+15)))
+        real_imag = torch.cat((ffted.real, ffted.imag), 1)
 
+        ## nts = 10 # number of time samples (spaced by 20ms)
+        ## f = self.tensor_files[idx // nts]
+        ## symbol = torch.zeros((1,273+15), dtype=torch.float32) # add +5 entries to fit TransNet d36
+        ## symbol[0,:273] = torch.load(f)[:,:,idx%nts]
+        ## symbol = torch.complex(symbol[0,:], torch.zeros(symbol[0,:].shape))
 
-        return t
+        ## # Get the FFT using the complex grid
+        ## ffted = fft(symbol)
+
+        ## # Collapse phase and amplitude into the same channel as in paper
+        ## real_imag = torch.cat((ffted.real, ffted.imag), 0)
+        ## t = torch.reshape(real_imag, (1,2*(273+15)))
+
+        print(f'{real_imag.shape=}')
+
+        return real_imag
 
 
 if __name__ == "__main__":

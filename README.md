@@ -201,7 +201,7 @@ python main.py\
     -d 36\
     -b 64\
     -j 2\
-    -fraunhofer\
+    -caez\
     --scenario in\
     --save_path /data/datasets/caez/caez_5g_outdoor/transnet-models/cr8ep1000d36b64/
 ```
