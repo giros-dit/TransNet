@@ -137,7 +137,7 @@ def main():
                                  shuffle=True)
         # Define model
         model = init_model(args, dim_feedforward=2*(273+15),
-                           out_dim=2*(273+15))
+                           out_dim=2*(273+15), caez=True)
         model.to(device)
     else:
         # Create the data loader

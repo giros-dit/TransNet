@@ -40,11 +40,11 @@ def init_device(seed=None, cpu=None, gpu=None, affinity=None):
     return device, pin_memory
 
 
-def init_model(args, dim_feedforward=2048, out_dim=1080):
+def init_model(args, dim_feedforward=2048, out_dim=1080, caez=False):
     # Model loading
     model = transnet(reduction=args.cr, d_model=args.d_model,
                      dim_feedforward=dim_feedforward,
-                     out_dim=out_dim)
+                     out_dim=out_dim, caez=caez)
 
     if args.pretrained is not None:
         assert os.path.isfile(args.pretrained)

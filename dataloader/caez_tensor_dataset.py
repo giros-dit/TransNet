@@ -8,7 +8,7 @@ import os
 import glob
 import pandas as pd
 import torch
-from torch.fft import fft
+from torch.fft import fft2
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 from scipy.io import loadmat
@@ -201,10 +201,17 @@ class CaezGridSymbolTensorDataset(Dataset):
         # Load the file for the different antennas
         #  each file inside tensor_files e.g. H-t_0-B_0-A_0.pt has shape (1,273,10)
         fA0 = torch.load(self.tensor_files[(idx//10) * 4])
-        fA1 = torch.load(self.tensor_files[(idx//10) * 4])
-        fA2 = torch.load(self.tensor_files[(idx//10) * 4])
-        fA3 = torch.load(self.tensor_files[(idx//10) * 4])
-        print(f'{fA3.shape=}')
+        fA1 = torch.load(self.tensor_files[(idx//10) * 4 + 1])
+        fA2 = torch.load(self.tensor_files[(idx//10) * 4 + 2])
+        fA3 = torch.load(self.tensor_files[(idx//10) * 4 + 3])
+
+        # print(f'== FILES {idx=} == ')
+        # print(self.tensor_files[(idx//10) * 4])
+        # print(self.tensor_files[(idx//10) * 4 + 1])
+        # print(self.tensor_files[(idx//10) * 4 + 2])
+        # print(self.tensor_files[(idx//10) * 4 + 3])
+
+        # print(f'{fA3.shape=}')
         H[0,:273] = fA0[0,:,idx % 10]
         H[1,:273] = fA1[0,:,idx % 10]
         H[2,:273] = fA2[0,:,idx % 10]
@@ -214,7 +221,7 @@ class CaezGridSymbolTensorDataset(Dataset):
         H_ = torch.complex(H, torch.zeros(H.shape))
 
         # Get the FFT using the complex grid
-        ffted = fft(H_)
+        ffted = fft2(H_)
 
         # Collapse phase and amplitude into the same channel as in paper
         real_imag = torch.cat((ffted.real, ffted.imag), 1)
@@ -232,7 +239,7 @@ class CaezGridSymbolTensorDataset(Dataset):
         ## real_imag = torch.cat((ffted.real, ffted.imag), 0)
         ## t = torch.reshape(real_imag, (1,2*(273+15)))
 
-        print(f'{real_imag.shape=}')
+        # print(f'{real_imag.shape=}')
 
         return real_imag
 
